@@ -149,51 +149,7 @@ body {
 }
 /* ===== RESPONSIVE MOBILE ===== */
 /* MOBILE GÉNÉRAL */
-@media (max-width: 768px) {
-
-  .menu {
-    width: 92%;
-    left: 4%;
-    top: 10px;
-    max-height: 50vh;
-    overflow-y: auto;
-    font-size: 13px;
-    padding: 10px;
-  }
-
-  .legend {
-    width: 92%;
-    left: 4%;
-    bottom: 10px;
-    max-height: 40vh;
-    overflow-y: auto;
-    font-size: 12px;
-  }
-}
-
-/* MOBILE PAYSAGE */
-@media (max-width: 900px) and (orientation: landscape) {
-
-  .menu {
-    width: 45%;
-    max-height: 70vh;
-    font-size: 12px;
-  }
-
-  .legend {
-    width: 45%;
-    max-height: 70vh;
-    font-size: 11px;
-  }
-}
-  @media (max-width: 768px) {
-  .menu.collapsed select,
-  .menu.collapsed label,
-  .menu.collapsed h3:not(:first-child) {
-    display: none;
-  }
-}
-  .menu-toggle {
+.menu-toggle {
   display: none;
 }
 
@@ -204,17 +160,22 @@ body {
     position: absolute;
     top: 10px;
     left: 4%;
-    z-index: 1000;
+    z-index: 1002;
     background: white;
     border: none;
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 14px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   }
 
   .menu {
     display: none;
+    z-index: 1001;
+    width: 92%;
+    left: 4%;
+    top: 50px;
+    max-height: 60vh;
+    overflow-y: auto;
   }
 
   .menu.open {
