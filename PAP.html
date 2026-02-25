@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<!-- MapLibre GL CDN -->
+<script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet">
+
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
+<style>
+/* ==== BOÎTES DE FILTRE ==== */
+.menu {
+  background: rgba(35,35,35,0.95);
+  color: white;
+  padding: 15px;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  font-family: Arial, sans-serif;
+  z-index: 1;
+  position: absolute;
+  top: 15px;
+  right: 30px; /* déplacé à droite */
+  width: 260px;
+}
+
+.menu h3 {
+  margin: 5px 0 10px 0;
+  font-size: 15px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 4px;
+}
+
+.menu label {
+  font-weight: bold;
+  margin-top: 8px;
+  display: block;
+}
+
+.menu select {
+  width: 100%;
+  padding: 6px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #444;
+  color: white;
+}
+
+.menu select option {
+  background:#444;
+  color:white;
+}
+
+/* ==== POPUP ==== */
+.popup-custom {
+  background: rgba(35,35,35,0.95);
+  color: #3a3a3a;
+  padding: 12px;
+  border-radius: 12px;
+  font-family: Arial, sans-serif;
+  max-width: 220px;
+  opacity: 0.95;
+}
+.popup-sanitaire { font-weight:bold; }
+
+.legend {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+  background: rgba(35,35,35,0.95); /* comme les boîtes de filtre */
+  color: white; /* texte blanc */
+  padding: 15px;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  max-width: 280px;
+  z-index: 2;
+}
+
+.legend.collapsed #legend-content {
+  display: none;
+}
+
+#legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.color-box {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 6px;
+  border: 1px solid #999;
+}
+
+.legend-item {
+  margin-bottom: 6px;
+}
+
+.legend-detail {
+  font-size: 11px;
+  color: #ddd; /* texte secondaire plus clair sur fond sombre */
+  margin-left: 22px;
+}
+
+#toggle-legend {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+}
+/* ==== CORRECTION PLEIN ÉCRAN ==== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  position: relative;
+}
+
+#map {
+  position: fixed;   /* ← IMPORTANT */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;     /* ← IMPORTANT */
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+
+  .menu {
+    width: 90%;
+    right: 5%;
+    top: 10px;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .legend {
+    width: 90%;
+    left: 5%;
+    bottom: 10px;
+    font-size: 12px;
+  }
+
+  #map {
+    touch-action: pan-x pan-y;
+  }
+.menu {
+  top: auto;
+  bottom: 10px;
+}
+}
+@media (max-width: 768px) {
+  .menu.collapsed select,
+  .menu.collapsed label,
+  .menu.collapsed h3:not(:first-child) {
+    display: none;
+  }
+}
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<!-- FILTRES PRINCIPAUX (droite) -->
+<div class="menu">
+<h3>Filtres principaux</h3>
+
+<label>Statut</label>
+<select id="statutFilter">
+  <option value="Gisement" selected>Gisement</option>
+  <option value="Hors-gisement">Hors-gisement</option>
+</select>
+
+<label>Département</label>
+<select id="departementFilter">
+  <option value="all">Tous</option>
+  <option value="22">22</option>
+  <option value="29">29</option>
+  <option value="35">35</option>
+  <option value="56">56</option>
+</select>
+
+<label id="libzoneLabel" style="display:none;">Lieu de pêche</label>
+<select id="libzoneFilter" style="display:none;">
+  <option value="all">Toutes</option>
+</select>
+
+<label id="groupeLabel" style="display:none;">Groupe</label>
+<select id="groupeFilter" style="display:none;">
+  <option value="all">Tous</option>
+</select>
+
+<label id="timbreLabel" style="display:none;">Timbre</label>
+<select id="timbreFilter" style="display:none;">
+  <option value="all">Tous</option>
+</select>
+
+<label>Sanitaire</label>
+<select id="sanitaireFilter">
+  <option value="all">Tous</option>
+  <option value="NC">NC</option>
+  <option value="EO">EO</option>
+  <option value="I">I</option>
+  <option value="A">A</option>
+  <option value="B">B</option>
+  <option value="C">C</option>
+</select>
+
+<h3>Fond de carte</h3>
+<select id="fondCarteSelect">
+  <option value="png">Carte SHOM</option>
+  <option value="osm">Fond classique OSM</option>
+  <option value="satellite">Satellite</option>
+  <option value="bathy">Bathymétrie</option>
+</select>
+</div>
+
+<div id="legend" class="mapboxgl-ctrl legend collapsed">
+  <div id="legend-header">
+    <span>Légende – Classement sanitaire</span>
+    <button id="toggle-legend">▾</button>
+  </div>
+
+  <div id="legend-content">
+    <div class="legend-item">
+      <span class="color-box" style="background:#2ECC40"></span>
+      <strong>A</strong> – Qualité excellente
+      <div class="legend-detail">
+        Zones dans lesquelles les coquillages peuvent être récoltés 
+        et mis directement sur le marché pour la consommation humaine 
+        directe après passage par un centre d'expédition agréé.
+      </div>
+    </div>
+
+    <div class="legend-item">
+      <span class="color-box" style="background:#FFDC00"></span>
+      <strong>B</strong> – Qualité moyenne
+      <div class="legend-detail">
+        Zones dans lesquelles les coquillages peuvent être récoltés 
+        mais ne peuvent être mis sur le marché pour la consommation 
+        humaine qu'après avoir été traités dans un centre de 
+        purification agréé ou après reparcage dans une zone 
+        spécifiquement agréée pour cette opération.
+      </div>
+    </div>
+
+    <div class="legend-item">
+      <span class="color-box" style="background:#FF851B"></span>
+      <strong>C</strong> – Qualité médiocre
+      <div class="legend-detail">
+        Zones dans lesquelles les coquillages peuvent être récoltés 
+        mais ne peuvent être mis sur le marché pour la consommation 
+        humaine qu'après un reparcage de longue durée dans une zone 
+        agréée à cet effet ou après traitement thermique dans un 
+        établissement agréé.
+      </div>
+    </div>
+
+    <div class="legend-item">
+      <span class="color-box" style="background:#FF4136"></span>
+      <strong>I</strong> – Interdit
+      <div class="legend-detail">
+        Zones d'activités portuaires et/ou zones polluées 
+        (zones autour d'émissaires de rejets ...), dans lesquelles 
+        aucune activité de pêche, de production ou de récolte de 
+        coquillages ne peut être pratiquée, quel que soit le groupe.
+      </div>
+    </div>
+
+    <div class="legend-item">
+      <span class="color-box" style="background:#0074D9"></span>
+      <strong>EO</strong> – Autorisation requise
+      <div class="legend-detail">
+        Zones dans lesquelles la récolte et la commercialisation de 
+        coquillages sont soumises à autorisation préalable et sous 
+        conditions particulières (arrêté préfectoral spécifique 
+        lors de l'exploitation).
+      </div> 
+    </div>
+
+    <div class="legend-item">
+      <span class="color-box" style="background:#a4a4a4"></span>
+      <strong>NC</strong> – Non classé
+      <div class="legend-detail">
+        En l'absence de classement sanitaire, les activités de pêche 
+        ou d'élevage n'y sont pas autorisées. Seuls les pectinidés 
+        (coquilles Saint-Jacques, pétoncles), les gastéropodes marins 
+        (notamment bulots, ormeaux, patelles) et les échinodermes 
+        non filtreurs (notamment oursins) peuvent y être récoltés, 
+        sauf spécifications contraires.
+      </div>     
+    </div>
+
+    <hr>
+
+    <strong>Groupes d'espèces :</strong>
+    <ul>
+      <li>Groupe 1 : Gastéropodes (bulots etc.), échinodermes (oursins) et tuniciers (violets), ...</li>
+      <li>Groupe 2 : Bivalves fouisseurs, c'est-à-dire les mollusques bivalves filtreurs dont 
+        l'habitat est constitué par les sédiments (palourdes, coques...)</li>
+      <li>Groupe 3 : Bivalves non fouisseurs, c'est-à-dire les mollusques bivalves filtreurs dont 
+        l'habitat est situé hors des sédiments(huîtres, moules...)</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// ==== LIMITES DU PNG ====
+var bounds = [
+  [-6.5912623, 46.9905008],
+  [-1.5004278, 49.3054555]
+];
+
+var map = new maplibregl.Map({
+  container:"map",
+  style:"https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json",
+  center:[-3.2458,48.1585],
+  zoom: window.innerWidth < 768 ? 6.8 : 7.5,
+  minZoom: window.innerWidth < 768 ? 6.5 : 7.5,
+  maxZoom:14,
+  maxBounds: bounds
+});
+
+// Zoom par département
+const departementZoom = { 
+22:{center:[-2.75,48.85],zoom:8.75}, 
+29:{center:[-4.28,48.25],zoom:8.5}, 
+35:{center:[-1.85,48.58],zoom:9.75}, 
+56:{center:[-3.05,47.7],zoom:8.75} };
+// Zoom par lieu
+const lieuZoom = { 
+  "Baie d'Audierne":[[-4.36396,47.88314],11], 
+  "Baie de Binic":[[-2.80769,48.60279],11], 
+  "Baie de Douarnenez":[[-4.29846,48.16565],11], 
+  "Baie de Fresnaie":[[-2.294,48.63664],11], 
+  "Baie de Lancieux":[[-2.17701,48.59476],12], 
+  "Baie de Locquirec":[[-3.63714,48.68833],12], 
+  "Baie de Saint Brieuc":[[-2.65301,48.5404],11], 
+  "Baie de l’Arguenon":[[-2.2082,48.59521],12], 
+  "Banc des Hermelles":[[-1.67113,48.64243],11], 
+  "Banc du Guer":[[-3.55074,48.73115],12.5], 
+  "Blancs Sablons":[[-4.77194,48.3774],12], 
+  "Gisements classés du QM de Saint Brieuc":[[-2.4082,48.59521],10], 
+  "Goas Treiz (Trebeurden)":[[-3.59194,48.79036],12], 
+  "Ille & Vilaine":[[-1.98625,48.56319],12], 
+  "La Ville Ger en Rance":[[-1.97423,48.51564],12], 
+  "Plougrescant/Pleubian – Pleubian/Lanmodez":[[-3.06113,48.87556],11], 
+  "Rade de Brest":[[-4.31277,48.33067],10], 
+  "Rivière Pont l’Abbé":[[-4.18943,47.85531],12], 
+  "Rivière d’Etel":[[-3.13675,47.71911],11], 
+  "Secteur Nord Finistère (Morlaix, Camaret, Brest)":[[-4.41708,48.50945],9.5], 
+  "Secteur Sud Finistère (Concarneau)":[[-3.88424,47.86122],11], 
+  "Secteur de Lorient":[[-3.33675,47.71911],10], 
+  "Littoral des Côtes d'Armor":[[-2.75,48.85],9],
+  "Secteur de Douarnenez":[[-4.29846,48.16565],9.5],
+  "Secteur d'Audierne":[[-4.36396,47.88314],9.5],
+  "Secteur du Guilvinec":[[-4.23675,47.82911],10],
+  "Secteur Nord Finistère":[[-4.29,48.55],9.1],
+  "Littoral du Finistère":[[-4.28,48.25],8.8],
+  "Littoral du Finistère (hors Secteurs d'Audierne et Douarnenez)":[[-4.28,48.25],8.8],
+  "Littoral d'Ille et Vilaine'":[[-1.85,48.58],10],
+  "Littoral du Morbihan":[[-3.03675,47.51911],9],
+  "Littoral du Morbihan (hors Rvière d'Etel)":[[-3.03675,47.51911],9],
+  "« Gisement de Pordic »":[[-2.7962,48.58907],12] };
+
+map.on("load", function() {
+
+  // ==== FOND PNG ====
+  map.addSource("fondPNG", {
+    type: "image",
+    url: "https://raw.githubusercontent.com/baptistedegueurce/maplibre/main/7076_SHOM.png",
+    coordinates: [
+      [-6.5912623, 49.2954555],  // top-left
+      [-1.5004278, 49.3054555],  // top-right
+      [-1.5004278, 46.9905008],  // bottom-right
+      [-6.5912623, 46.9873008]   // bottom-left
+    ]
+  });
+
+  map.addLayer({
+    id: "fondPNG",
+    type: "raster",
+    source: "fondPNG",
+    paint: { "raster-opacity": 1 }
+  });
+
+  // ==== FOND SATELLITE (Stadia Maps) ====
+  map.addSource("satellite", {
+    type: "raster",
+    tiles: [
+      "https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg?api_key=99ecc044-862a-43a6-ad1e-ce71e5fdb46c"
+    ],
+    tileSize: 256,
+    attribution: "© Stadia Maps © OpenMapTiles © OpenStreetMap contributors"
+  });
+
+  map.addLayer({
+    id: "satellite-layer",
+    type: "raster",
+    source: "satellite",
+    layout: { visibility: "none" } // caché par défaut
+  });
+
+  // ==== BATHYMÉTRIE (EMODnet) ====
+  map.addSource("bathymetry", {
+    type: "raster",
+    tiles: [
+      "https://tiles.emodnet-bathymetry.eu/2020/baselayer/web_mercator/{z}/{x}/{y}.png"
+    ],
+    tileSize: 256,
+    attribution: "EMODnet Bathymetry"
+  });
+
+  map.addLayer({
+    id: "bathymetry-layer",
+    type: "raster",
+    source: "bathymetry",
+    layout: { visibility: "none" } // activé via menu
+  });
+
+  // ==== MENU FOND ====
+  const fondSelect = document.getElementById("fondCarteSelect");
+  fondSelect.addEventListener("change", function() {
+    if(this.value === "png") {
+      map.setLayoutProperty("fondPNG", "visibility", "visible");
+      map.setLayoutProperty("satellite-layer", "visibility", "none");
+      map.setLayoutProperty("bathymetry-layer", "visibility", "none");
+    } else if(this.value === "osm") {
+      map.setLayoutProperty("fondPNG", "visibility", "none");
+      map.setLayoutProperty("satellite-layer", "visibility", "none");
+      map.setLayoutProperty("bathymetry-layer", "visibility", "none");
+    } else if(this.value === "satellite") {
+      map.setLayoutProperty("fondPNG", "visibility", "none");
+      map.setLayoutProperty("bathymetry-layer", "visibility", "none");
+      map.setLayoutProperty("satellite-layer", "visibility", "visible");
+    } else if(this.value === "bathy") {
+      map.setLayoutProperty("fondPNG", "visibility", "none");
+      map.setLayoutProperty("satellite-layer", "visibility", "none");
+      map.setLayoutProperty("bathymetry-layer", "visibility", "visible");
+    }
+  });
+
+  // ==== SOURCE GEOJSON ====
+  map.addSource("Zones", {
+    type: "geojson",
+    data: "https://raw.githubusercontent.com/baptistedegueurce/maplibre/main/PAP_BZH.geojson"
+  });
+
+  map.addLayer({
+    id: "Zones",
+    type: "fill",
+    source: "Zones",
+    filter: ["==", ["get", "Statut"], "Gisement"],
+    paint: {
+      "fill-color": ["match", ["get", "Sanitaire"],
+        "A", "#2ECC40",
+        "B", "#FFDC00",
+        "C", "#FF851B",
+        "EO", "#0074D9",
+        "NC", "#AAAAAA",
+        "I", "#FF4136",
+        "#0074D9"
+      ],
+      "fill-opacity": 0.8,
+      "fill-outline-color": "white"
+    }
+  });
+
+  map.addLayer({
+    id: "Zones-outline",
+    type: "line",
+    source: "Zones",
+    filter: ["==", ["get", "Statut"], "Gisement"],
+    paint: {
+      "line-color": "white",
+      "line-width": 1.2
+    }
+  });
+  // ==== POPUP ====
+  const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: "popup-custom" });
+
+  map.on("mousemove", function(e) {
+    const f = map.queryRenderedFeatures(e.point, { layers: ["Zones"] })[0];
+    if(f) {
+      map.getCanvas().style.cursor = "pointer";
+      const san = f.properties.Sanitaire || "NC";
+      const sanColor = { "A":"#2ECC40", "B":"#FFDC00", "C":"#FF851B", "EO":"#0074D9", "NC":"#AAAAAA", "I":"#FF4136" }[san] || "#FFFFFF";
+
+      popup.setLngLat(e.lngLat)
+           .setHTML(
+             `<b>${f.properties.CdZCY}</b><br>
+              <b>Sanitaire:</b> <span style="color:${sanColor}; font-weight:bold;">${san}</span><br>
+              <b>Groupe:</b> ${f.properties.Groupe}<br>
+              <b>Timbre:</b> ${f.properties.Espece}<br>
+              <b>Lieu de pêche:</b> ${f.properties.Lib_zone}`
+           )
+           .addTo(map);
+    } else {
+      map.getCanvas().style.cursor = "";
+      popup.remove();
+    }
+  });
+
+  map.on("click", function(e) {
+    const f = map.queryRenderedFeatures(e.point, { layers: ["Zones"] })[0];
+    if(f && f.properties.URLTexteRe) {
+      window.open(f.properties.URLTexteRe, "_blank");
+    }
+  });
+
+});
+
+// ==== FILTRES ====
+const statutSelect = document.getElementById("statutFilter");
+const depSelect = document.getElementById("departementFilter");
+const libSelect = document.getElementById("libzoneFilter");
+const groupeSelect = document.getElementById("groupeFilter");
+const timbreSelect = document.getElementById("timbreFilter");
+const sanSelect = document.getElementById("sanitaireFilter");
+
+function updateFilters(){
+  let filter = ["all"];
+  filter.push(["==", ["get", "Statut"], statutSelect.value]);
+  if(depSelect.value!=="all") filter.push(["==",["get","Departement"],depSelect.value]);
+  if(libSelect.value!=="all") filter.push(["==",["get","Lib_zone"],libSelect.value]);
+  if(groupeSelect.value!=="all") filter.push(["==",["get","Groupe"],groupeSelect.value]);
+  if(timbreSelect.value!=="all") filter.push(["==",["get","Espece"],timbreSelect.value]);
+  if(sanSelect.value!=="all") filter.push(["==",["get","Sanitaire"],sanSelect.value]);
+  map.setFilter("Zones",filter);
+  map.setFilter("Zones-outline", filter);
+
+}
+
+function populateOptions() {
+  const features = map.querySourceFeatures("Zones");
+
+  const zones = new Set();
+  const groupes = new Set();
+  const timbres = new Set();
+
+  features.forEach(f => {
+    // Filtre Statut
+    if(f.properties.Statut !== statutSelect.value) return;
+
+    // Filtre département
+    if(depSelect.value !== "all" && f.properties.Departement != depSelect.value) return;
+
+    // Filtre lieu
+    if(libSelect.value !== "all" && f.properties.Lib_zone != libSelect.value) return;
+
+    zones.add(f.properties.Lib_zone);
+    groupes.add(f.properties.Groupe);
+    timbres.add(f.properties.Espece);
+  });
+
+  // Lieu
+  libSelect.innerHTML = "<option value='all'>Toutes</option>";
+  Array.from(zones).sort().forEach(z => {
+    const o = document.createElement("option");
+    o.value = z;
+    o.text = z;
+    libSelect.appendChild(o);
+  });
+
+  // Groupe
+  groupeSelect.innerHTML = "<option value='all'>Tous</option>";
+  Array.from(groupes).sort().forEach(g => {
+    const o = document.createElement("option");
+    o.value = g;
+    o.text = g;
+    groupeSelect.appendChild(o);
+  });
+
+  // Timbre
+  timbreSelect.innerHTML = "<option value='all'>Tous</option>";
+  Array.from(timbres).sort().forEach(t => {
+    const o = document.createElement("option");
+    o.value = t;
+    o.text = t;
+    timbreSelect.appendChild(o);
+  });
+
+  // Affichage conditionnel des filtres
+  const show = depSelect.value !== "all";
+  document.getElementById("libzoneLabel").style.display = show ? "block" : "none";
+  libSelect.style.display = show ? "block" : "none";
+  document.getElementById("groupeLabel").style.display = show ? "block" : "none";
+  groupeSelect.style.display = show ? "block" : "none";
+  document.getElementById("timbreLabel").style.display = show ? "block" : "none";
+  timbreSelect.style.display = show ? "block" : "none";
+}
+depSelect.addEventListener("change", function(){
+  populateOptions();
+  libSelect.value="all"; groupeSelect.value="all"; timbreSelect.value="all"; sanSelect.value="all";
+  if(this.value==="all"){ map.flyTo({center:[-3.2458,48.1585],zoom:7.5}); }
+  else { map.flyTo({center:departementZoom[this.value].center, zoom:departementZoom[this.value].zoom}); }
+  updateFilters();
+});
+
+libSelect.addEventListener("change", function(){
+  if(this.value!=="all" && lieuZoom[this.value]){
+    map.flyTo({center:lieuZoom[this.value][0], zoom:lieuZoom[this.value][1]});
+  } else if(depSelect.value!=="all"){
+    map.flyTo({center:departementZoom[depSelect.value].center, zoom:departementZoom[depSelect.value].zoom});
+  }
+  groupeSelect.value="all"; timbreSelect.value="all";
+  updateFilters();
+});
+
+statutSelect.addEventListener("change", function() {
+  depSelect.value = "all";
+  libSelect.value = "all";
+  groupeSelect.value = "all";
+  timbreSelect.value = "all";
+  sanSelect.value = "all";
+
+  populateOptions();
+  updateFilters();
+
+  // Vue globale par défaut
+  map.flyTo({center:[-3.2458,48.1585],zoom:7.5});
+});
+
+groupeSelect.addEventListener("change", function(){ timbreSelect.value="all"; updateFilters(); });
+timbreSelect.addEventListener("change", updateFilters);
+sanSelect.addEventListener("change", updateFilters);
+
+populateOptions();
+
+document.getElementById("toggle-legend").addEventListener("click", function() {
+  document.getElementById("legend").classList.toggle("collapsed");
+  if(document.getElementById("legend").classList.contains("collapsed")){
+    this.textContent = "▸";
+  } else {
+    this.textContent = "▾";
+  }
+});
+
+window.addEventListener("resize", () => {
+  map.resize();
+});
+</script>
+</body>
+</html>
