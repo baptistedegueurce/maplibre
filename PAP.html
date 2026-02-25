@@ -2,8 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- MapLibre GL CDN -->
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
 <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet">
@@ -149,44 +148,43 @@ body {
   width: 100%;
 }
 /* ===== RESPONSIVE MOBILE ===== */
+/* MOBILE GÉNÉRAL */
 @media (max-width: 768px) {
 
   .menu {
     width: 92%;
     left: 4%;
-    right: auto;
     top: 10px;
-    max-height: 55vh;        /* ← limite la hauteur */
-    overflow-y: auto;        /* ← scroll interne */
+    max-height: 50vh;
+    overflow-y: auto;
     font-size: 13px;
     padding: 10px;
-  }
-
-  .menu h3 {
-    font-size: 14px;
-  }
-
-  .menu select {
-    padding: 5px;
-    font-size: 13px;
   }
 
   .legend {
     width: 92%;
     left: 4%;
     bottom: 10px;
-    max-height: 45vh;        /* ← limite hauteur */
-    overflow-y: auto;        /* ← scroll interne */
+    max-height: 40vh;
+    overflow-y: auto;
+    font-size: 12px;
+  }
+}
+
+/* MOBILE PAYSAGE */
+@media (max-width: 900px) and (orientation: landscape) {
+
+  .menu {
+    width: 45%;
+    max-height: 70vh;
     font-size: 12px;
   }
 
-  .legend ul {
-    padding-left: 15px;
-  }
-
-}
   .legend {
-  transition: max-height 0.3s ease;
+    width: 45%;
+    max-height: 70vh;
+    font-size: 11px;
+  }
 }
   @media (max-width: 768px) {
   .menu.collapsed select,
@@ -682,6 +680,15 @@ window.addEventListener("resize", () => {
   if (window.innerWidth < 768) {
   document.querySelector(".menu").classList.add("collapsed");
 }
+  window.addEventListener("resize", function () {
+  map.resize();
+});
+
+window.addEventListener("orientationchange", function () {
+  setTimeout(function () {
+    map.resize();
+  }, 300);
+});
 </script>
 </body>
 </html>
