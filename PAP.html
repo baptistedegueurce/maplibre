@@ -195,10 +195,10 @@ body {
 .legend-header {
   position: sticky;
   top: 0;
-  background: white;
+  background: #555;
   z-index: 10;
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #666;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -577,19 +577,25 @@ const timbreSelect = document.getElementById("timbreFilter");
 const sanSelect = document.getElementById("sanitaireFilter");
 
 function updateFilters(){
+
+  if(!map.getLayer("Zones") || !map.getLayer("Zones-outline")) return;
+
   let filter = ["all"];
+
   filter.push(["==", ["get", "Statut"], statutSelect.value]);
+
   if(depSelect.value!=="all") filter.push(["==",["get","Departement"],depSelect.value]);
   if(libSelect.value!=="all") filter.push(["==",["get","Lib_zone"],libSelect.value]);
   if(groupeSelect.value!=="all") filter.push(["==",["get","Groupe"],groupeSelect.value]);
   if(timbreSelect.value!=="all") filter.push(["==",["get","Espece"],timbreSelect.value]);
   if(sanSelect.value!=="all") filter.push(["==",["get","Sanitaire"],sanSelect.value]);
+
   map.setFilter("Zones",filter);
   map.setFilter("Zones-outline", filter);
-
 }
 
 function populateOptions() {
+  if(!map.getSource("Zones")) return;
   const features = map.querySourceFeatures("Zones");
 
   const zones = new Set();
@@ -683,7 +689,10 @@ groupeSelect.addEventListener("change", function(){ timbreSelect.value="all"; up
 timbreSelect.addEventListener("change", updateFilters);
 sanSelect.addEventListener("change", updateFilters);
 
-populateOptions();
+map.on("load", () => {
+  populateOptions();
+  updateFilters();
+});
 
 document.getElementById("toggle-legend").addEventListener("click", function() {
   document.getElementById("legend").classList.toggle("collapsed");
