@@ -182,6 +182,30 @@ body {
     display: block;
   }
 }
+  /* Légende responsive mobile */
+@media (max-width: 768px) {
+
+  .legend {
+    max-height: 40vh;        /* limite la hauteur à 40% de l'écran */
+    overflow-y: auto;        /* scroll interne */
+    overflow-x: hidden;
+    padding-right: 8px;      /* évite que le texte touche le scroll */
+  }
+
+}
+  .legend-container {
+  max-height: 50vh;
+  overflow: hidden;
+}
+
+.legend-container.open {
+  overflow-y: auto;
+}
+  @media (orientation: landscape) and (max-width: 900px) {
+  .legend {
+    max-height: 60vh;
+  }
+}
 </style>
 </head>
 
