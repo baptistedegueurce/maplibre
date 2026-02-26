@@ -461,7 +461,7 @@ map.on("load", function() {
   // ==== MENU FOND ====
   const fondSelect = document.getElementById("fondCarteSelect");
   fondSelect.addEventListener("change", function() {
-    } else if(this.value === "osm") {
+    if(this.value === "osm") {
       map.setLayoutProperty("satellite-layer", "visibility", "none");
       map.setLayoutProperty("bathymetry-layer", "visibility", "none");
     } else if(this.value === "satellite") {
