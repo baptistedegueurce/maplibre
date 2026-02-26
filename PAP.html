@@ -281,7 +281,7 @@ body {
   <div class="legend-content">
     <div class="legend-item">
       <span class="color-box" style="background:#2ECC40"></span>
-      <strong>A</strong> – Qualité excellente
+      <strong>Z</strong> – Qualité excellente
       <div class="legend-detail">
         Zones dans lesquelles les coquillages peuvent être récoltés 
         et mis directement sur le marché pour la consommation humaine 
@@ -439,7 +439,7 @@ map.on("load", function() {
   type: "raster",
   source: "fondPNG",
   layout: { visibility: "visible" }
-}, "Zones"); 
+}); 
 
   // ==== FOND SATELLITE (Stadia Maps) ====
   map.addSource("satellite", {
@@ -449,15 +449,14 @@ map.on("load", function() {
     ],
     tileSize: 256,
     attribution: "© Stadia Maps © OpenMapTiles © OpenStreetMap contributors",
-    layout: { visibility: "none" }
-}, "Zones");
+});
 
   map.addLayer({
   id: "satellite-layer",
   type: "raster",
   source: "satellite",
   layout: { visibility: "none" }
-}, "Zones");
+});
 
   // ==== BATHYMÉTRIE (EMODnet) ====
   map.addSource("bathymetry", {
@@ -474,7 +473,7 @@ map.on("load", function() {
   type: "raster",
   source: "bathymetry",
   layout: { visibility: "none" }
-}, "Zones");
+});
 
   // ==== MENU FOND ====
   const fondSelect = document.getElementById("fondCarteSelect");
