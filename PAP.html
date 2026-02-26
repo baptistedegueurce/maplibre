@@ -406,11 +406,11 @@ map.on("load", function() {
   });
 
   map.addLayer({
-    id: "fondPNG",
-    type: "raster",
-    source: "fondPNG",
-    paint: { "raster-opacity": 1 }
-  });
+  id: "fondPNG",
+  type: "raster",
+  source: "fondPNG",
+  layout: { visibility: "visible" }
+}, "Zones"); 
 
   // ==== FOND SATELLITE (Stadia Maps) ====
   map.addSource("satellite", {
@@ -419,15 +419,16 @@ map.on("load", function() {
       "https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg?api_key=99ecc044-862a-43a6-ad1e-ce71e5fdb46c"
     ],
     tileSize: 256,
-    attribution: "© Stadia Maps © OpenMapTiles © OpenStreetMap contributors"
-  });
+    attribution: "© Stadia Maps © OpenMapTiles © OpenStreetMap contributors",
+    layout: { visibility: "none" }
+}, "Zones");
 
   map.addLayer({
-    id: "satellite-layer",
-    type: "raster",
-    source: "satellite",
-    layout: { visibility: "none" } // caché par défaut
-  });
+  id: "satellite-layer",
+  type: "raster",
+  source: "satellite",
+  layout: { visibility: "none" }
+}, "Zones");
 
   // ==== BATHYMÉTRIE (EMODnet) ====
   map.addSource("bathymetry", {
@@ -440,11 +441,11 @@ map.on("load", function() {
   });
 
   map.addLayer({
-    id: "bathymetry-layer",
-    type: "raster",
-    source: "bathymetry",
-    layout: { visibility: "none" } // activé via menu
-  });
+  id: "bathymetry-layer",
+  type: "raster",
+  source: "bathymetry",
+  layout: { visibility: "none" }
+}, "Zones");
 
   // ==== MENU FOND ====
   const fondSelect = document.getElementById("fondCarteSelect");
