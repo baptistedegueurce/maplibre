@@ -210,6 +210,9 @@ body {
   flex: 1;
   padding: 10px;
 }
+  .legend.collapsed .legend-content {
+  display: none;
+}
 </style>
 </head>
 
@@ -264,7 +267,6 @@ body {
 
 <h3>Fond de carte</h3>
 <select id="fondCarteSelect">
-  <option value="png">Carte SHOM</option>
   <option value="osm">Fond classique OSM</option>
   <option value="satellite">Satellite</option>
   <option value="bathy">Bathymétrie</option>
@@ -281,7 +283,7 @@ body {
   <div class="legend-content">
     <div class="legend-item">
       <span class="color-box" style="background:#2ECC40"></span>
-      <strong>Z</strong> – Qualité excellente
+      <strong>A</strong> – Qualité excellente
       <div class="legend-detail">
         Zones dans lesquelles les coquillages peuvent être récoltés 
         et mis directement sur le marché pour la consommation humaine 
@@ -422,25 +424,6 @@ const lieuZoom = {
 
 map.on("load", function() {
 
-  // ==== FOND PNG ====
-  map.addSource("fondPNG", {
-    type: "image",
-    url: "https://raw.githubusercontent.com/baptistedegueurce/maplibre/main/7076_SHOM.png",
-    coordinates: [
-      [-6.5912623, 49.2954555],  // top-left
-      [-1.5004278, 49.3054555],  // top-right
-      [-1.5004278, 46.9905008],  // bottom-right
-      [-6.5912623, 46.9873008]   // bottom-left
-    ]
-  });
-
-  map.addLayer({
-  id: "fondPNG",
-  type: "raster",
-  source: "fondPNG",
-  layout: { visibility: "visible" }
-}); 
-
   // ==== FOND SATELLITE (Stadia Maps) ====
   map.addSource("satellite", {
     type: "raster",
@@ -478,20 +461,13 @@ map.on("load", function() {
   // ==== MENU FOND ====
   const fondSelect = document.getElementById("fondCarteSelect");
   fondSelect.addEventListener("change", function() {
-    if(this.value === "png") {
-      map.setLayoutProperty("fondPNG", "visibility", "visible");
-      map.setLayoutProperty("satellite-layer", "visibility", "none");
-      map.setLayoutProperty("bathymetry-layer", "visibility", "none");
     } else if(this.value === "osm") {
-      map.setLayoutProperty("fondPNG", "visibility", "none");
       map.setLayoutProperty("satellite-layer", "visibility", "none");
       map.setLayoutProperty("bathymetry-layer", "visibility", "none");
     } else if(this.value === "satellite") {
-      map.setLayoutProperty("fondPNG", "visibility", "none");
       map.setLayoutProperty("bathymetry-layer", "visibility", "none");
       map.setLayoutProperty("satellite-layer", "visibility", "visible");
     } else if(this.value === "bathy") {
-      map.setLayoutProperty("fondPNG", "visibility", "none");
       map.setLayoutProperty("satellite-layer", "visibility", "none");
       map.setLayoutProperty("bathymetry-layer", "visibility", "visible");
     }
