@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- MapLibre GL CDN -->
-<script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet">
-
-<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <style>
 /* ==== BOÎTES DE FILTRE ==== */
 .menu {
@@ -223,12 +221,6 @@ body {
 <button class="menu-toggle">☰ Filtres</button>
   <div class="menu">
 <h3>Filtres principaux</h3>
-
-<label>Statut</label>
-<select id="statutFilter">
-  <option value="Gisement" selected>Gisement</option>
-  <option value="Hors-gisement">Hors-gisement</option>
-</select>
 
 <label>Département</label>
 <select id="departementFilter">
@@ -483,7 +475,6 @@ map.on("load", function() {
     id: "Zones",
     type: "fill",
     source: "Zones",
-    filter: ["==", ["get", "Statut"], "Gisement"],
     paint: {
       "fill-color": ["match", ["get", "Sanitaire"],
         "A", "#2ECC40",
@@ -503,7 +494,6 @@ map.on("load", function() {
     id: "Zones-outline",
     type: "line",
     source: "Zones",
-    filter: ["==", ["get", "Statut"], "Gisement"],
     paint: {
       "line-color": "white",
       "line-width": 1.2
@@ -544,11 +534,10 @@ map.on("load", function() {
 });
 
 // ==== FILTRES ====
-const statutSelect = document.getElementById("statutFilter");
 const depSelect = document.getElementById("departementFilter");
-const libSelect = document.getElementById("libzoneFilter");
 const groupeSelect = document.getElementById("groupeFilter");
 const timbreSelect = document.getElementById("timbreFilter");
+const libSelect = document.getElementById("libzoneFilter");
 const sanSelect = document.getElementById("sanitaireFilter");
 
 function updateFilters(){
@@ -556,8 +545,6 @@ function updateFilters(){
   if(!map.getLayer("Zones") || !map.getLayer("Zones-outline")) return;
 
   let filter = ["all"];
-
-  filter.push(["==", ["get", "Statut"], statutSelect.value]);
 
   if(depSelect.value!=="all") filter.push(["==",["get","Departement"],depSelect.value]);
   if(libSelect.value!=="all") filter.push(["==",["get","Lib_zone"],libSelect.value]);
@@ -578,9 +565,6 @@ function populateOptions() {
   const timbres = new Set();
 
   features.forEach(f => {
-    // Filtre Statut
-    if(f.properties.Statut !== statutSelect.value) return;
-
     // Filtre département
     if(depSelect.value !== "all" && f.properties.Departement != depSelect.value) return;
 
@@ -646,19 +630,6 @@ libSelect.addEventListener("change", function(){
   updateFilters();
 });
 
-statutSelect.addEventListener("change", function() {
-  depSelect.value = "all";
-  libSelect.value = "all";
-  groupeSelect.value = "all";
-  timbreSelect.value = "all";
-  sanSelect.value = "all";
-
-  populateOptions();
-  updateFilters();
-
-  // Vue globale par défaut
-  map.flyTo({center:[-3.2458,48.1585],zoom:7.5});
-});
 
 groupeSelect.addEventListener("change", function(){ timbreSelect.value="all"; updateFilters(); });
 timbreSelect.addEventListener("change", updateFilters);
