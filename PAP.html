@@ -231,6 +231,18 @@ body {
   <option value="56">56</option>
 </select>
 
+<label>Sanitaire</label>
+<select id="sanitaireFilter">
+  <option value="all">Tous</option>
+  <option value="NC">NC</option>
+  <option value="EO">EO</option>
+  <option value="I">I</option>
+  <option value="A">A</option>
+  <option value="B">B</option>
+  <option value="C">C</option>
+  <option value="P">P</option>
+</select>
+    
 <label id="libzoneLabel" style="display:none;">Lieu de pêche</label>
 <select id="libzoneFilter" style="display:none;">
   <option value="all">Toutes</option>
@@ -246,17 +258,6 @@ body {
   <option value="all">Tous</option>
 </select>
 
-<label>Sanitaire</label>
-<select id="sanitaireFilter">
-  <option value="all">Tous</option>
-  <option value="NC">NC</option>
-  <option value="EO">EO</option>
-  <option value="I">I</option>
-  <option value="A">A</option>
-  <option value="B">B</option>
-  <option value="C">C</option>
-  <option value="P">P</option>
-</select>
 
 <h3>Fond de carte</h3>
 <select id="fondCarteSelect">
@@ -344,7 +345,7 @@ body {
     </div>
     
     <div class="legend-item">
-      <span class="color-box" style="background:#a4a4a4"></span>
+      <span class="color-box" style="background:#EE82EE"></span>
       <strong>P</strong> – Pêche réglementée
       <div class="legend-detail">
         Les timbres classés P ne sont pas inclus dans les obligations
@@ -494,10 +495,11 @@ map.on("load", function() {
         "EO", "#0074D9",
         "NC", "#AAAAAA",
         "I", "#FF4136",
-        "P", "EE82EE",
+        "P", "#EE82EE",
         "#FFFFFF"
       ],
-      "fill-opacity": 0.8
+      "fill-opacity": 0.8,
+    
     }
   });
 
