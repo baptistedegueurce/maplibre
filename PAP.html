@@ -559,7 +559,8 @@ function updateFilters(){
 
   let filter = ["all"];
 
-  if(depSelect.value!=="all") filter.push(["==",["get","Departement"],depSelect.value]);
+  if(depSelect.value!=="all") 
+    filter.push(["==",["get","Departement"], Number(depSelect.value)]);
   if(libSelect.value!=="all") filter.push(["==",["get","Lib_zone"],libSelect.value]);
   if(groupeSelect.value!=="all") filter.push(["==",["get","Groupe"],groupeSelect.value]);
   if(timbreSelect.value!=="all") filter.push(["==",["get","Espece"],timbreSelect.value]);
