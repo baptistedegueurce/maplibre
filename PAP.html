@@ -255,6 +255,7 @@ body {
   <option value="A">A</option>
   <option value="B">B</option>
   <option value="C">C</option>
+  <option value="P">P</option>
 </select>
 
 <h3>Fond de carte</h3>
@@ -341,7 +342,16 @@ body {
         sauf spécifications contraires.
       </div>     
     </div>
-
+    
+    <div class="legend-item">
+      <span class="color-box" style="background:#a4a4a4"></span>
+      <strong>P</strong> – Pêche réglementée
+      <div class="legend-detail">
+        Les timbres classés P ne sont pas inclus dans les obligations
+        de classement sanitaire pour la pêche à pied. Cette dernière
+        est donc autorisée aux endroits indiqués sauf interdiction contraire.
+      </div>     
+    </div>
     <hr>
 
     <strong>Groupes d'espèces :</strong>
@@ -351,6 +361,7 @@ body {
         l'habitat est constitué par les sédiments (palourdes, coques...)</li>
       <li>Groupe 3 : Bivalves non fouisseurs, c'est-à-dire les mollusques bivalves filtreurs dont 
         l'habitat est situé hors des sédiments(huîtres, moules...)</li>
+      <li>Groupe "-" : Espèces non prises en compte dans le classement sanitaire.</li>
     </ul>
   </div>
 </div>
@@ -483,10 +494,10 @@ map.on("load", function() {
         "EO", "#0074D9",
         "NC", "#AAAAAA",
         "I", "#FF4136",
-        "#0074D9"
+        "P", "EE82EE",
+        "#FFFFFF"
       ],
-      "fill-opacity": 0.8,
-      "fill-outline-color": "white"
+      "fill-opacity": 0.8
     }
   });
 
@@ -496,7 +507,7 @@ map.on("load", function() {
     source: "Zones",
     paint: {
       "line-color": "white",
-      "line-width": 1.2
+      "line-width": 0.5
     }
   });
   // ==== POPUP ====
@@ -507,7 +518,7 @@ map.on("load", function() {
     if(f) {
       map.getCanvas().style.cursor = "pointer";
       const san = f.properties.Sanitaire || "NC";
-      const sanColor = { "A":"#2ECC40", "B":"#FFDC00", "C":"#FF851B", "EO":"#0074D9", "NC":"#AAAAAA", "I":"#FF4136" }[san] || "#FFFFFF";
+      const sanColor = { "A":"#2ECC40", "B":"#FFDC00", "C":"#FF851B", "EO":"#0074D9", "NC":"#AAAAAA", "I":"#FF4136", "P":"EE82EE" }[san] || "#FFFFFF";
 
       popup.setLngLat(e.lngLat)
            .setHTML(
