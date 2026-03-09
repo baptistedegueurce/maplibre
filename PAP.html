@@ -520,7 +520,7 @@ map.on("load", function() {
     if(f) {
       map.getCanvas().style.cursor = "pointer";
       const san = f.properties.Sanitaire || "NC";
-      const sanColor = { "A":"#2ECC40", "B":"#FFDC00", "C":"#FF851B", "EO":"#0074D9", "NC":"#AAAAAA", "I":"#FF4136", "P":"EE82EE" }[san] || "#FFFFFF";
+      const sanColor = { "A":"#2ECC40", "B":"#FFDC00", "C":"#FF851B", "EO":"#0074D9", "NC":"#AAAAAA", "I":"#FF4136", "P":"#EE82EE" }[san] || "#FFFFFF";
 
       popup.setLngLat(e.lngLat)
            .setHTML(
